@@ -61,8 +61,3 @@ def prob_gaussian_mixture(x: float, mus: jax.Array,
 def cosine_cutoff(r: float, r_cut: float) -> float:
     """cosine cutoff function that decays smoothly to zero at `r_cut`"""
     return jax.lax.select(r >= r_cut, 0 * r, 1 + jnp.cos(r * jnp.pi / r_cut)) * 0.5
-
-def r_midpoints(bin_edges: jax.Array, # [N,] 
-                **unused_kwargs) -> jax.Array:
-    """compute the midpoint of an array of bin edges"""
-    return (bin_edges[:-1] + bin_edges[1:])/2.
