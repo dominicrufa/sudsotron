@@ -6,7 +6,7 @@ from dataclasses import dataclass, asdict, field
 import typing
 import functools
 
-from sudsotron.cdft import utils
+from sudsotron.cDFT import utils, constants
 from sudsotron.nn.modules import (
     GaussianBasisMLPParams, 
     GaussianBasisMLP, 
@@ -15,7 +15,6 @@ from sudsotron.nn.modules import (
     NNParams,
 )
 from sudsotron.nn.utils import cosine_cutoff
-from sudsotron.cdft import constants
 
 import jaxopt
 

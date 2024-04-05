@@ -5,7 +5,6 @@ import numpy as np
 from dataclasses import dataclass, asdict, field
 import typing
 import functools
-import jaxopt
 
 
 def r_midpoints(bin_edges: jax.Array, **unused_kwargs) -> jax.Array:
@@ -113,7 +112,9 @@ def dFexcdn_HNC_Riemann_approx_periodic(
     """compute the differential of excess energy functional on periodic gridpoints"""
     delta_n = ns - n0
     integrand = delta_n * (dx * dy * dz)
-    unrolled_fftconv = jnp.fft.ifftn(jnp.fft.fftn(integrand).conj() * jnp.fft.fftn(c_kernel)).real
+    unrolled_fftconv = jnp.fft.ifftn(
+        jnp.fft.fftn(integrand).conj() * jnp.fft.fftn(c_kernel)
+        ).real
     unflipped_fftconv = jnp.roll(unrolled_fftconv, 
                                  shift = n.shape[0]//2, 
                                  axis = (0,1,2))
