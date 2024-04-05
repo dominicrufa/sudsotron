@@ -55,35 +55,60 @@ class HNCRadialDCF:
     bounds: jax.Array = field(init=False)
     untrained_params: NNParams = field(init=False)
     dcf: NNFn = field(init=False)
+    grad_dcf: NNFn = field(init=False)
+    valgrad_dcf: NNFn = field(init=False)
+    dcf_loss: typing.Callable[NNParams, float] = field(init=False)
+    params: typing.Union[NNParams, None] = field(init=False) # `None` if not `fit_on_init`
 
     def __post_init__(self):
-        object.__setattr__(self, 'bin_centers', utils.r_midpoints(self.radial_bin_edges))
-        object.__setattr__(self, 'bounds', jnp.array([self.radial_bin_edges[0], 
-                                 self.radial_bin_edges[-1]])
-                                 )
-        model = GaussianBasisMLP(**asdict(self.mlp_params))
-        untrained_params = model.init(self.key, jnp.zeros(1))
-        object.__setattr__(self, 'untrained_params', untrained_params)
         object.__setattr__(
             self, 
-            'dcf', 
-            functools.partial(dcf_helper, r_cut = self.r_cut, model=model)
-            )
+            'bin_centers', 
+            utils.r_midpoints(self.radial_bin_edges))
+        object.__setattr__(
+            self, 
+            'bounds', 
+            jnp.array(
+                [self.radial_bin_edges[0], self.radial_bin_edges[-1]]
+                )
+                 )
+        model = GaussianBasisMLP(**asdict(self.mlp_params))
+        untrained_params = model.init(self.key, jnp.zeros(1))
+        dcf = functools.partial(
+                    dcf_helper, 
+                    r_cut = self.r_cut, 
+                    model=model)
+        grad_dcf = jax.grad(dcf)
+        valgrad_dcf = jax.value_and_grad(dcf)
+        object.__setattr__(
+            self, 
+            'untrained_params', 
+            untrained_params)
+        
+        object.__setattr__(self, 'dcf', jax.jit(dcf))
+        object.__setattr__(self, 'grad_dcf', jax.jit(grad_dcf))
+        object.__setattr__(self, 'valgrad_dcf', jax.jit(valgrad_dcf))
         object.__setattr__(
             self,
             'dcf_loss',
-            functools.partial(dcf_loss, 
-                              r_midpoints = self.bin_centers, 
-                              dcf_data = self.dcf_data,
-                              dcf_fn = self.dcf
-                              ), 
+            jax.jit(
+                functools.partial(
+                    dcf_loss, 
+                    r_midpoints = self.bin_centers, 
+                    dcf_data = self.dcf_data,
+                    dcf_fn = self.dcf
+                    )
+            ) 
         )
         if self.fit_on_init:
             fit_params = self.fit_model()
             object.__setattr__(self, 'params', fit_params)
+        else:
+            object.__setattr__(self, 'params', None)
         
     
     def fit_model(self) -> NNParams:
+        """train the loss fn"""
         if self.train_verbose:
             callback = lambda x: print(f"loss: {jax.jit(self.dcf_loss)(x)}")
         else:

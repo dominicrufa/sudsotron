@@ -3,40 +3,38 @@ from jax import numpy as jnp
 import typing
 import numpy as np
 from dataclasses import dataclass, asdict
+from flax.core import FrozenDict
 
-@dataclass(frozen=True)
-class LJParameters:
-    """lennard jones parameters allowing softcore;
-    default parameters define a pair of tip3p water oxygen steric 
-    interations with water 1 being unique new"""
-    # standard parameters
-    lambda_select: float = 1. 
-    os1: float = 0.3150752406575124  
-    os2: float = 0.3150752406575124
-    ns1: float = 0.3150752406575124
-    ns2: float = 0.3150752406575124
-    oe1: float = 0.
-    ne1: float = 0.635968
-    oe2: float = 0.635968
-    ne2: float = 0.635968
-    uo1: int = 0
-    uo2: int = 0
-    un1: int = 1
-    un2: int = 0
-    lj_switch: float = 50.
-    lj_max: float = 100.
+# potential types
+PotentialFn = typing.Callable[[float, ...], float]
+DynamicPotentialFn = typing.Callable[[float, float, ...], float]
 
-    # softcore parameters
-    softcore_alpha: float = 0.5
-    softcore_beta: float = 0.5
-    softcore_b: int = 1
-    softcore_c: int = 6
-    softcore_d: int = 1
-    softcore_e: int = 1
-    softcore_f: int = 2
+# Default parameter objects
+TIP3PSCLJParameters = FrozenDict(
+    {
+        'lambda_select': 1.,
+        'os1': 0.3150752406575124,
+        'os2': 0.3150752406575124,
+        'ns1': 0.3150752406575124,
+        'ns2': 0.3150752406575124,
+        'oe1': 0.,
+        'ne1': 0.635968,
+        'ne2': 0.635968,
+        'uo1': 0,
+        'uo2': 0,
+        'un1': 1,
+        'un2': 0,
+        'lj_switch': 50.,
+        'lj_max': 100.,
 
-TIP3P_LJ_PARAMETERS = LJParameters()
+        'softcore_alpha': 0.5,
+        'softcore_beta': 0.5,
+        'softcore_b': 1,
+        'softcore_c': 6,
+    }
+)
 
+# helper fns
 def pw_lin_to_quad_to_const(
         x: float, 
         x_sw: float, 
