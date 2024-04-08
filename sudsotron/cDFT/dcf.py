@@ -54,8 +54,6 @@ class HNCRadialDCF:
     bounds: jax.Array = field(init=False)
     untrained_params: NNParams = field(init=False)
     dcf: NNFn = field(init=False)
-    grad_dcf: NNFn = field(init=False)
-    valgrad_dcf: NNFn = field(init=False)
     dcf_loss: typing.Callable[NNParams, float] = field(init=False)
     params: typing.Union[NNParams, None] = field(init=False) # `None` if not `fit_on_init`
 
@@ -77,16 +75,12 @@ class HNCRadialDCF:
                     dcf_helper, 
                     r_cut = self.r_cut, 
                     model=model)
-        grad_dcf = jax.grad(dcf)
-        valgrad_dcf = jax.value_and_grad(dcf)
         object.__setattr__(
             self, 
             'untrained_params', 
             untrained_params)
         
         object.__setattr__(self, 'dcf', jax.jit(dcf))
-        object.__setattr__(self, 'grad_dcf', jax.jit(grad_dcf))
-        object.__setattr__(self, 'valgrad_dcf', jax.jit(valgrad_dcf))
         object.__setattr__(
             self,
             'dcf_loss',

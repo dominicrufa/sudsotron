@@ -6,6 +6,14 @@ from dataclasses import dataclass, asdict, field
 import typing
 import functools
 
+from sudsotron.nn.utils import cosine_cutoff
+from sudsotron.nn.modules import (
+    GaussianBasisMLPParams, 
+    GaussianBasisMLP,
+    NNFn,
+    NNParams,
+    )
+
 
 def r_midpoints(bin_edges: jax.Array, **unused_kwargs) -> jax.Array:
     return (bin_edges[:-1] + bin_edges[1:])/2.
@@ -75,9 +83,9 @@ def spatial_grids(
                                                  (num_gridpoints_per_dim, 
                                                   num_gridpoints_per_dim, 
                                                   num_gridpoints_per_dim)))(Rs)
-    return grid_rs
+    return (X,Y,Z), dxdydz, grid_rs
     
-def dFiddn_fn(
+def dFidsdn(
         ns: jax.Array, # densities
         n0: float, # uniform density
         kT: float, # thermal bath energy
@@ -85,7 +93,7 @@ def dFiddn_fn(
     """compute the derivative of ideal Helmholtz free energy w.r.t. density"""
     return kT * jnp.log(ns/n0)
 
-def dFexcdn_HNC_Riemann_approx_aperiodic(
+def dFexcsdn_HNC_Riemann_approx_aperiodic(
     ns: jax.Array, # [N,N,N]
     c_kernel: jax.Array, # [N,N,N]                           
     kT: float, 
@@ -100,7 +108,7 @@ def dFexcdn_HNC_Riemann_approx_aperiodic(
     gamma = jax.scipy.signal.fftconvolve(integrand, c_kernel, mode='same')
     return -0.5 * kT * gamma
 
-def dFexcdn_HNC_Riemann_approx_periodic(
+def dFexcsdn_HNC_Riemann_approx_periodic(
     ns: jax.Array, 
     c_kernel: jax.Array, 
     kT: float, 
@@ -120,3 +128,14 @@ def dFexcdn_HNC_Riemann_approx_periodic(
                                  axis = (0,1,2))
     gamma = jnp.flip(unflipped_fftconv) # flips all axes to push back to a proper convolution
     return -0.5 * kT * gamma 
+
+def density_from_model(
+        r: float, 
+        params: NNParams, 
+        r_cut: float, 
+        n0: float, 
+        kT: float, 
+        model: GaussianBasisMLP) -> NNFn:
+    u = model.apply(params, jnp.array([r]))[0]
+    u = u * cosine_cutoff(r, r_cut)
+    return n0 * jnp.exp(-u / kT)
