@@ -1,1 +1,1 @@
-"""cdft init"""    
+"""cDFT init"""    

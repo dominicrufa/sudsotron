@@ -36,7 +36,7 @@ from sudsotron.cDFT.constants import (
 )
 
 @dataclass(frozen=True)
-class cDFT:
+class SScDFT: # spherically symmetric classical DFT
     hnc_dcf: HNCRadialDCF
     Uext_handler: PotentialHandler
     grid_bounds: jnp.array([-1., 1.])
