@@ -48,7 +48,6 @@ class SScDFT: # spherically symmetric classical DFT
     key: jax.Array = DEFAULT_NN_KEY
 
     # reference arrays
-    c_kernel: jax.Array = field(init=False)
     R: jax.Array = field(init=False)
     dcf_kernel: jax.Array = field(init=False)
 
@@ -60,7 +59,7 @@ class SScDFT: # spherically symmetric classical DFT
     dFsdn_loss: typing.Callable[NNParams, float]
 
     # nn bits
-    density: typing.Callable[[float, float, NNParams], jax.Array] = field(init=False)
+    density: typing.Callable[[float, float, NNParams], float] = field(init=False)
     grid_density: typing.Callable[[NNParams], jax.Array] = field(init=False)
     untrained_params: NNParams = field(init=False)
 
