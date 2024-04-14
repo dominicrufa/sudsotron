@@ -7,7 +7,7 @@ faster bubbles, less work.
 
 ## Installation
 
-This is only tested on Linux.
+The following installation has only been tested on an NVIDIA GPU-equipped Linux machine:
 
 ```shell
 conda env create -f environment.yml # -n sudsotron
