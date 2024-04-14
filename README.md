@@ -10,8 +10,9 @@ faster bubbles, less work.
 This is only tested on Linux.
 
 ```shell
-pip install -r requirements.txt
-pip install . # or `pip install -e .` for dev mode
+conda env create -f environment.yml # -n sudsotron
+conda activate sudsotron
+pip install . # `pip install -e .` for dev
 ```
 
 ## Copyright
