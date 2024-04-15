@@ -93,7 +93,7 @@ class DynamicNeuralPotentialHandler:
     init_params_scalar: float = 1e-6
 
     # parameters
-    dynamic_potential: DynamicPotentialFn
+    dynamic_potential: DynamicPotentialFn = field(init=False)
     untrained_params: NNParams = field(init=False)
     params: typing.Union[NNParams, None] = field(init=False) # `None` if not `fit_on_init`
 
