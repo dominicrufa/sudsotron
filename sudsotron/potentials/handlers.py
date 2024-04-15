@@ -1,13 +1,9 @@
 """handle objects for potentials"""
+import jax
 from jax import numpy as jnp
 import typing
 import numpy as np
-import jaxopt
 from dataclasses import dataclass, asdict, field, fields
-from collections.abc import Mapping
-from types import MappingProxyType
-from collections.abc import Mapping
-from types import MappingProxyType
 from flax.core import FrozenDict, copy
 from flax import linen as nn
 
