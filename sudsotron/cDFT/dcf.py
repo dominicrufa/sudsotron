@@ -6,6 +6,7 @@ from dataclasses import dataclass, asdict, field
 import typing
 import functools
 
+from sudsotron.utils import minimize
 from sudsotron.cDFT import utils, constants
 from sudsotron.nn.modules import (
     GaussianBasisMLPParams, 
@@ -15,8 +16,6 @@ from sudsotron.nn.modules import (
     NNParams,
 )
 from sudsotron.nn.utils import cosine_cutoff
-
-import jaxopt
 
 def dcf_helper(
         r: float, 
@@ -37,18 +36,13 @@ def dcf_loss(params: NNParams, r_midpoints: jax.Array, dcf_data, dcf_fn: NNFn) -
 @dataclass(frozen=True)
 class HNCRadialDCF:
     """fit and deploy a radial direct correlation 
-    function in the HNC approximation
+    function in the HNC approximation.
     """
     radial_bin_edges: jax.Array # [N,]
     dcf_data: jax.Array # [N-1], dcf data at bin edge centers
     mlp_params: GaussianBasisMLPParams = GaussianBasisMLPParams()
     r_cut: typing.Union[float, None] = constants.DEFAULT_R_CUT
     key: jax.Array = field(default_factory = lambda: DEFAULT_NN_KEY)
-    fit_on_init: bool = True
-    train_method: str = 'BFGS'
-    train_maxiter: int = 99999
-    train_tol: float = 1e-6
-    train_verbose: bool = True
 
     bin_centers: jax.Array = field(init=False)
     bounds: jax.Array = field(init=False)
@@ -93,23 +87,20 @@ class HNCRadialDCF:
                     )
             ) 
         )
-        if self.fit_on_init:
-            fit_params = self.fit_model()
-            object.__setattr__(self, 'params', fit_params)
-        else:
-            object.__setattr__(self, 'params', None)
-        
+        object.__setattr__(self, 'params', None)
     
-    def fit_model(self) -> NNParams:
-        """train the loss fn"""
-        if self.train_verbose:
-            callback = lambda x: print(f"loss: {jax.jit(self.dcf_loss)(x)}")
-        else:
-            callback = None
-        solver = jaxopt.ScipyMinimize(fun = self.dcf_loss, 
-                                      method=self.train_method, 
-                                      maxiter=self.train_maxiter, 
-                                      tol=self.train_tol,
-                                      callback = callback)
-        res = solver.run(self.untrained_params)
-        return res.params
+    def set_params(self, params):
+        object.__setattr__(self, 'params', params)
+    
+    def fit_dcf_params(
+            self,
+            **minimize_kwargs,
+            ) -> typing.NamedTuple:
+        """fit the dcf parameters, set the new params, and return the minimizer result `NamedTuple`"""
+        res = minimize(
+            self.dcf,
+            value_and_grad = False,
+            params = self.untrained_params,
+            **minimize_kwargs)
+        self.set_params(res.params)
+        return res
