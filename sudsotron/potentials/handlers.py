@@ -88,7 +88,7 @@ class DynamicNeuralPotentialHandler:
     mlp_params: GaussianBasisMLPParams = GaussianBasisMLPParams() # contains R_CUT, T
     r_cut: float = field(init=False)
     T: float = field(init=False)
-    key: jax.Array = DEFAULT_NN_KEY
+    key: jax.Array = field(default_factory = lambda : DEFAULT_NN_KEY)
     zero_at_t0: bool = True
     init_params_scalar: float = 1e-6
 
