@@ -20,7 +20,6 @@ from sudsotron.nn.modules import (
 )
 
 from sudsotron.nn.utils import cosine_cutoff
-from sudsotron.cdft import constants
 
 from sudsotron.potentials.potential_lib import (
     PotentialFn,
