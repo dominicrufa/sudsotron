@@ -63,6 +63,7 @@ dependencies:
 - ipython=8.22.2=pyh707e725_0
 - jax=0.4.24=pyhd8ed1ab_0
 - jaxlib=0.4.23=cuda120py312hc008a70_201
+- jaxopt=0.8.3=pyhd8ed1ab_0
 - jedi=0.19.1=pyhd8ed1ab_0
 - jupyter_client=8.6.1=pyhd8ed1ab_0
 - jupyter_core=5.7.2=py312h7900ff3_0
