@@ -40,13 +40,13 @@ from sudsotron.cDFT.constants import (
 class SScDFT: # spherically symmetric classical DFT
     hnc_dcf: HNCRadialDCF
     Uext_handler: PotentialHandler
-    grid_bounds: jnp.array([-1., 1.])
+    grid_bounds: jax.Array = field(default_factory = lambda : jnp.array([-1., 1.]))
     num_gridpoints: int = 100
     n0: float = DEFAULT_N0
     kT: float = DEFAULT_KT
     model_params: GaussianBasisMLPParams = GaussianBasisMLPParams()
     interpolate_density: bool = False
-    key: jax.Array = DEFAULT_NN_KEY
+    key: jax.Array = field(default_factory = lambda: DEFAULT_NN_KEY)
 
     # reference arrays
     R: jax.Array = field(init=False)
@@ -57,7 +57,7 @@ class SScDFT: # spherically symmetric classical DFT
     dFexcsdn: typing.Callable[jax.Array, jax.Array] = field(init=False)
     dFextsdn: jax.Array = field(init=False)
     dFsdn: typing.Callable[jax.Array, jax.Array] = field(init=False)
-    dFsdn_loss: typing.Callable[NNParams, float]
+    dFsdn_loss: typing.Callable[NNParams, float] = field(init=False)
 
     # nn bits
     density: typing.Callable[[float, float, NNParams], float] = field(init=False)
@@ -192,10 +192,8 @@ class SScDFT: # spherically symmetric classical DFT
             maxiter=maxiter,
             tol = tol,
             jit=False)
-        
-        
         res = solver.run(params)
         return res
     
-    def set_params(self, params):
+    def set_params(self, params: NNParams):
         object.__setattr__(self, 'params', params)
