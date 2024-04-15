@@ -14,7 +14,9 @@ from sudsotron.nn.modules import (
 def minimize(
         loss_fn: typing.Union[
             typing.Callable[NNParams, float], # val
-            typing.Callable[NNParams, [float, NNParams]] # or value and grad
+            typing.Callable[
+                NNParams, 
+                typing.Tuple[float, NNParams]] # or value and grad
         ],
         value_and_grad: bool,
         params: NNParams,
