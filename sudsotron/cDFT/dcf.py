@@ -15,7 +15,6 @@ from sudsotron.nn.modules import (
     NNFn,
     NNParams,
 )
-from sudsotron.nn.utils import cosine_cutoff
 
 def dcf_helper(
         r: float, 
