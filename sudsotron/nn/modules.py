@@ -30,7 +30,7 @@ class MLPParams:
 
 @dataclass(frozen=True)
 class GaussianBasisParams:
-    bounds: jax.Array = jnp.array([[-1., 1.]])
+    bounds: jax.Array = field(default_factory = lambda: jnp.array([[-1., 1.]]))
     projection_dim: int = 32
 
 

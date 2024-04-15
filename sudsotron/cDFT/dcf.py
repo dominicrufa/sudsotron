@@ -43,7 +43,7 @@ class HNCRadialDCF:
     dcf_data: jax.Array # [N-1], dcf data at bin edge centers
     mlp_params: GaussianBasisMLPParams = GaussianBasisMLPParams()
     r_cut: typing.Union[float, None] = constants.DEFAULT_R_CUT
-    key: jax.Array = DEFAULT_NN_KEY
+    key: jax.Array = field(default_factory = lambda: DEFAULT_NN_KEY)
     fit_on_init: bool = True
     train_method: str = 'BFGS'
     train_maxiter: int = 99999
