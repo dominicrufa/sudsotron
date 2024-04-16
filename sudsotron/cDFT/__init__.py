@@ -22,7 +22,7 @@ from sudsotron.cDFT.utils import (
     dFexcsdn_HNC_Riemann_approx_aperiodic,
 )
 
-from sudsotron.potentials.handlers import (
+from sudsotron.potentials import (
     PotentialHandler,
 )
 
