@@ -17,6 +17,7 @@ from sudsotron.nn.modules import (
 from sudsotron.utils import cosine_cutoff, minimize
 
 from sudsotron.cDFT.utils import (
+    r_midpoints,
     spatial_grids, 
     dFidsdn, 
     dFexcsdn_HNC_Riemann_approx_aperiodic,
@@ -70,7 +71,7 @@ class HNCRadialDCFHandler:
         object.__setattr__(
             self, 
             'bin_centers', 
-            utils.r_midpoints(self.radial_bin_edges))
+            r_midpoints(self.radial_bin_edges))
         object.__setattr__(
             self, 
             'bounds', 
@@ -111,7 +112,8 @@ class HNCRadialDCFHandler:
             self,
             **minimize_kwargs,
             ) -> typing.NamedTuple:
-        """fit the dcf parameters, set the new params, and return the minimizer result `NamedTuple`"""
+        """fit the dcf parameters, set the new params, 
+        and return the minimizer result `NamedTuple`"""
         res = minimize(
             self.dcf,
             value_and_grad = False,
