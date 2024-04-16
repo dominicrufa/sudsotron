@@ -118,7 +118,8 @@ class HNCRadialDCFHandler:
             self.dcf_loss,
             value_and_grad = False,
             params = self.untrained_params,
-            **minimize_kwargs)
+            **minimize_kwargs
+            )
         self.set_params(res.params)
         return res
 

@@ -26,7 +26,7 @@ def minimize(
         params: NNParams,
         minimizer: abc.ABCMeta = jaxopt.ScipyMinimize,
         verbose: typing.Union[str, bool]='overwrite',
-        minimizer_kwargs = {'maxiter': 9999, 'tol': 1e-6},
+        minimizer_kwargs = {'maxiter': 9999, 'tol': 1e-6, 'method': 'BFGS'},
         **unused_kwargs,
         ) -> typing.NamedTuple:
     """BFGS minimize some parameters of the nn flavour; 
