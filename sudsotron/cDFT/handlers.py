@@ -6,6 +6,7 @@ from dataclasses import dataclass, asdict, field
 import typing
 import functools
 from flax import serialization
+from importlib import resources
 
 from sudsotron.nn.modules import (
     GaussianBasisMLPParams, 
@@ -150,6 +151,16 @@ class HNCRadialDCFHandler:
         params = serialization.from_bytes(handler.untrained_params, _bytes)
         handler.set_params(params)
         return handler
+
+
+def load_HNCRadalDCFHandler(
+    npz_datafile: str=None,
+    params_bytefile: str=None) -> HNCRadialDCFHandler:
+    """load the given dcf handler from npz datafile and params bytefile;
+    default `None` reverts to respective datafiles in `sudsotron.data`"""
+    npz_datafile = resources.files('sudsotron.data') / 'tip3p_dcf_data.npz' if npz_datafile is None else npz_datafile
+    params_bytefile = resources.files('sudsotron.data') / 'HNCRadialDCFHandler.tip3p.params.txt' if params_bytefile is None else params_bytefile
+    return HNCRadialDCFHandler.load_from_params_binary(params_bytefile, None, None, npz_datafile)
 
 
 def density_from_model(
