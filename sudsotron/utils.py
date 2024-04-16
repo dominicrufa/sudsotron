@@ -49,6 +49,6 @@ def minimize(
         _loss, _grad_loss = valgrad_fn(params)
         call(_loss)
         return _loss, _grad_loss
-    solver = minimizer(_loss_fn, **minimizer_kwargs)    
+    solver = minimizer(fun = _loss_fn, **minimizer_kwargs)    
     res = solver.run(params)
     return res
