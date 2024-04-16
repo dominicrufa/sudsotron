@@ -17,9 +17,9 @@ from sudsotron.nn import (
 from sudsotron.utils import cosine_cutoff, minimize
 
 from sudsotron.cDFT.utils import (
-    spatial_grids, dFidsdn, 
+    spatial_grids, 
+    dFidsdn, 
     dFexcsdn_HNC_Riemann_approx_aperiodic,
-    density_from_model,
 )
 
 from sudsotron.potentials.handlers import (
