@@ -7,7 +7,7 @@ import abc
 import typing
 import functools
 
-from sudsotron.nn import (
+from sudsotron.nn.modules import (
     NNParams,
 )
 
