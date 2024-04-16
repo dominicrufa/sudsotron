@@ -1,19 +1,4 @@
 """utilities for cdft"""
-import jax
-from jax import numpy as jnp
-import numpy as np
-from dataclasses import dataclass, asdict, field
-import typing
-import functools
-
-from sudsotron.nn.utils import cosine_cutoff
-from sudsotron.nn.modules import (
-    GaussianBasisMLPParams, 
-    GaussianBasisMLP,
-    NNFn,
-    NNParams,
-    )
-
 
 def r_midpoints(bin_edges: jax.Array, **unused_kwargs) -> jax.Array:
     return (bin_edges[:-1] + bin_edges[1:])/2.

@@ -1,23 +1,6 @@
 """Write some modules in flax.linen"""
-import jax 
-from jax import numpy as jnp
-import typing
-from dataclasses import dataclass, field
 
-from flax import linen as nn
-from sudsotron.nn import utils as nnutls
-
-NNParams = typing.Dict[str, typing.Union[typing.Dict, jax.Array]]
-NNFn = typing.Callable[[typing.Union[float, jax.Array],
-                        NNParams,
-                        ...
-                        ],
-                       typing.Union[float, jax.Array]
-                       ]
-
-DEFAULT_NN_KEY = jax.random.PRNGKey(2024)
-
-
+from sudsotron.nn.utils import gaussian_basis_projections
 
 @dataclass(frozen=True)
 class MLPParams:
@@ -69,7 +52,7 @@ class GaussianBasis(nn.Module):
 
     @nn.compact
     def __call__(self, x: jax.Array, **unused_kwargs) -> jax.Array:
-        out = nnutls.gaussian_basis_projections(x, self.bounds, self.projection_dim).flatten()
+        out = gaussian_basis_projections(x, self.bounds, self.projection_dim).flatten()
         return out
 
 class GaussianBasisMLP(nn.Module):

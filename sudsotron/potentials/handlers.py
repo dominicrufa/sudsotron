@@ -1,27 +1,20 @@
 """handle objects for potentials"""
-import jax
-from jax import numpy as jnp
-import typing
-import numpy as np
-from dataclasses import dataclass, asdict, field, fields
+
 from flax.core import FrozenDict, copy
 from flax import linen as nn
 
-from sudsotron.nn.modules import (
-    GaussianBasisMLPParams, 
-    GaussianBasisMLP, 
+from sudsotron.nn import (
     DEFAULT_NN_KEY,
     NNFn,
     NNParams,
 )
 
-from sudsotron.nn.utils import cosine_cutoff
-
-from sudsotron.potentials.potential_lib import (
-    PotentialFn,
-    DynamicPotentialFn,
+from sudsotron.nn.modules import (
+    GaussianBasisMLP,
+    GaussianBasisMLPParams,
 )
 
+from sudsotron.nn.utils import cosine_cutoff
 
 def dynamic_potential(
         x: float, 

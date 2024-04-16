@@ -6,7 +6,7 @@ from dataclasses import dataclass, asdict, field
 import typing
 import functools
 
-from sudsotron.nn.modules import (
+from sudsotron.nn import (
     GaussianBasisMLPParams, 
     GaussianBasisMLP, 
     DEFAULT_NN_KEY,
@@ -17,9 +17,6 @@ from sudsotron.nn.modules import (
 from sudsotron.utils import minimize
 from sudsotron.nn.utils import cosine_cutoff
 
-from sudsotron.cDFT.dcf import (
-    HNCRadialDCF,
-)
 from sudsotron.cDFT.utils import (
     spatial_grids, dFidsdn, 
     dFexcsdn_HNC_Riemann_approx_aperiodic,
@@ -28,6 +25,10 @@ from sudsotron.cDFT.utils import (
 
 from sudsotron.potentials.handlers import (
     PotentialHandler,
+)
+
+from sudsotron.cDFT.dcf import (
+    HNCRadialDCF,
 )
 
 from sudsotron.cDFT.constants import (

@@ -1,6 +1,4 @@
 """utilities for nn modules"""
-import jax
-from jax import numpy as jnp
 
 def unnormalized_gaussian(x: float, mu: float, sigma: float, **unused_kwargs) -> float:
     return jnp.exp(-0.5 * ((x - mu) / sigma)**2)
