@@ -24,7 +24,7 @@ def minimize(
         ],
         value_and_grad: bool,
         params: NNParams,
-        minimizer: abc.ABCMeta = jaxopt.BFGS,
+        minimizer: abc.ABCMeta = jaxopt.ScipyMinimize,
         verbose: typing.Union[str, bool]='overwrite',
         minimizer_kwargs = {'maxiter': 9999, 'tol': 1e-6},
         **unused_kwargs,
@@ -49,6 +49,6 @@ def minimize(
         _loss, _grad_loss = valgrad_fn(params)
         call(_loss)
         return _loss, _grad_loss
-    solver = minimizer(valgrad_fn, **minimizer_kwargs)    
+    solver = minimizer(_loss_fn, **minimizer_kwargs)    
     res = solver.run(params)
     return res
