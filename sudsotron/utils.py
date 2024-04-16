@@ -45,7 +45,7 @@ def minimize(
         ender = '\n' if verbose == 'overwrite' else '\r'
         def call(_loss): print(_loss, end=ender)
 
-    def _loss_fn(params):
+    def _loss_fn(params, *args, **unused_kwargs):
         _loss, _grad_loss = valgrad_fn(params)
         call(_loss)
         return _loss, _grad_loss
