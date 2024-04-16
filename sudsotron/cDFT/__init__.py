@@ -56,7 +56,7 @@ class HNCRadialDCF:
     radial_bin_edges: jax.Array # [N,]
     dcf_data: jax.Array # [N-1], dcf data at bin edge centers
     mlp_params: GaussianBasisMLPParams = GaussianBasisMLPParams()
-    r_cut: typing.Union[float, None] = constants.DEFAULT_R_CUT
+    r_cut: typing.Union[float, None] = DEFAULT_R_CUT
     key: jax.Array = field(default_factory = lambda: DEFAULT_NN_KEY)
 
     bin_centers: jax.Array = field(init=False)
