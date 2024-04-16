@@ -114,9 +114,10 @@ class HNCRadialDCFHandler:
             assert self.dcf_data is not None
         else: # load these two datapoints from file
             data = np.load(self.npz_datafile)
-            # attempt to query radial bin edges with `bin_edges` or `radial_bin_edges`
-            try:
-                radial_bin_edges = data['']
+            radial_bin_edges = jnp.array(data['radial_bin_edges'])
+            dcf_data = jnp.array(data['dcf_data'])
+            object.__setattr__(self, 'radial_bin_edges', radial_bin_edges)
+            object.__setattr__(self, 'dcf_data', dcf_data)
 
     def set_params(self, params):
         object.__setattr__(self, 'params', params)
@@ -142,10 +143,13 @@ class HNCRadialDCFHandler:
             binary_file.write(bytes_output)
     
     @classmethod
-    def load_from_data()
-
-
-
+    def load_from_param_binary(cls, bytefilepath: str, radial_bin_edges, dcf_data, npz_datafile, **kwargs):
+        handler = cls(radial_bin_edges, dcf_data, npz_datafile, **kwargs)
+        with open(bytefilepath, "rb") as binary_file:
+            _bytes = binary_file.read()
+        params = serialization.from_bytes(handler.untrained_params, _bytes)
+        handler.set_params(params)
+        return handler
 
 
 def density_from_model(
