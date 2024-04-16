@@ -143,7 +143,7 @@ class HNCRadialDCFHandler:
             binary_file.write(bytes_output)
     
     @classmethod
-    def load_from_param_binary(cls, bytefilepath: str, radial_bin_edges, dcf_data, npz_datafile, **kwargs):
+    def load_from_params_binary(cls, bytefilepath: str, radial_bin_edges, dcf_data, npz_datafile, **kwargs):
         handler = cls(radial_bin_edges, dcf_data, npz_datafile, **kwargs)
         with open(bytefilepath, "rb") as binary_file:
             _bytes = binary_file.read()
