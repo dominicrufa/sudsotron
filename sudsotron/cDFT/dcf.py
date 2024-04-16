@@ -1,20 +1,5 @@
 """modules for training, deployment, and analysis of direct correlations"""
-import jax
-from jax import numpy as jnp
-import numpy as np
-from dataclasses import dataclass, asdict, field
-import typing
-import functools
 
-from sudsotron.utils import minimize
-from sudsotron.cDFT import utils, constants
-from sudsotron.nn.modules import (
-    GaussianBasisMLPParams, 
-    GaussianBasisMLP, 
-    DEFAULT_NN_KEY,
-    NNFn,
-    NNParams,
-)
 
 def dcf_helper(
         r: float, 
