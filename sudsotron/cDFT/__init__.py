@@ -14,8 +14,7 @@ from sudsotron.nn import (
     NNParams,
 )
 
-from sudsotron.utils import minimize
-from sudsotron.nn.utils import cosine_cutoff
+from sudsotron.utils import cosine_cutoff, minimize
 
 from sudsotron.cDFT.utils import (
     spatial_grids, dFidsdn, 

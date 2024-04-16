@@ -9,12 +9,12 @@ from sudsotron.nn import (
     NNParams,
 )
 
-from sudsotron.nn.modules import (
+from sudsotron.nn import (
     GaussianBasisMLP,
     GaussianBasisMLPParams,
 )
 
-from sudsotron.nn.utils import cosine_cutoff
+from sudsotron.utils import cosine_cutoff
 
 def dynamic_potential(
         x: float, 

@@ -7,9 +7,13 @@ import abc
 import typing
 import functools
 
-from sudsotron.nn.modules import (
+from sudsotron.nn import (
     NNParams,
 )
+
+def cosine_cutoff(r: float, r_cut: float) -> float:
+    """cosine cutoff function that decays smoothly to zero at `r_cut`"""
+    return jax.lax.select(r >= r_cut, 0 * r, 1 + jnp.cos(r * jnp.pi / r_cut)) * 0.5
 
 def minimize(
         loss_fn: typing.Union[
