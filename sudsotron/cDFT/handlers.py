@@ -133,7 +133,7 @@ def density_from_model(
 
 @dataclass(frozen=True)
 class SScDFTHandler: # spherically symmetric classical DFT
-    hnc_dcf: HNCRadialDCF
+    hnc_dcf: HNCRadialDCFHandler
     Uext_handler: PotentialHandler
     grid_bounds: jax.Array = field(default_factory = lambda : jnp.array([-1., 1.]))
     num_gridpoints: int = 100
