@@ -115,7 +115,7 @@ class HNCRadialDCFHandler:
         """fit the dcf parameters, set the new params, 
         and return the minimizer result `NamedTuple`"""
         res = minimize(
-            self.dcf,
+            self.dcf_loss,
             value_and_grad = False,
             params = self.untrained_params,
             **minimize_kwargs)
