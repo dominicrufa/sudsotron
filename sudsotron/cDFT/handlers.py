@@ -5,6 +5,7 @@ import numpy as np
 from dataclasses import dataclass, asdict, field
 import typing
 import functools
+from flax import serialization
 
 from sudsotron.nn.modules import (
     GaussianBasisMLPParams, 
@@ -54,8 +55,9 @@ class HNCRadialDCFHandler:
     """fit and deploy a radial direct correlation 
     function in the HNC approximation.
     """
-    radial_bin_edges: jax.Array # [N,]
-    dcf_data: jax.Array # [N-1], dcf data at bin edge centers
+    radial_bin_edges: typing.Union[jax.Array, None] # [N,]
+    dcf_data: typing.Union[jax.Array, None] # [N-1], dcf data at bin edge centers
+    npz_datafile: typing.Union[str, None]
     mlp_params: GaussianBasisMLPParams = GaussianBasisMLPParams()
     r_cut: typing.Union[float, None] = DEFAULT_R_CUT
     key: jax.Array = field(default_factory = lambda: DEFAULT_NN_KEY)
@@ -68,6 +70,7 @@ class HNCRadialDCFHandler:
     params: typing.Union[NNParams, None] = field(init=False) # `None` if not `fit_on_init`
 
     def __post_init__(self):
+        self.attempt_datafile_load()
         object.__setattr__(
             self, 
             'bin_centers', 
@@ -105,6 +108,16 @@ class HNCRadialDCFHandler:
         )
         object.__setattr__(self, 'params', None)
     
+    def attempt_datafile_load(self):
+        if self.npz_datafile is None:
+            assert self.radial_bin_edges is not None
+            assert self.dcf_data is not None
+        else: # load these two datapoints from file
+            data = np.load(self.npz_datafile)
+            # attempt to query radial bin edges with `bin_edges` or `radial_bin_edges`
+            try:
+                radial_bin_edges = data['']
+
     def set_params(self, params):
         object.__setattr__(self, 'params', params)
     
@@ -122,6 +135,18 @@ class HNCRadialDCFHandler:
             )
         self.set_params(res.params)
         return res
+
+    def serialize_to_txt(self, bytefilepath: str):
+        bytes_output = serialization.to_bytes(self.params)
+        with open(bytefilepath, "wb") as binary_file:
+            binary_file.write(bytes_output)
+    
+    @classmethod
+    def load_from_data()
+
+
+
+
 
 def density_from_model(
         r: float, 
