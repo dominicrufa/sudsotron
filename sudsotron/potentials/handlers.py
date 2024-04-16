@@ -36,7 +36,6 @@ def __post_init__(self):
     object.__setattr__(self, 'paramd_potential', paramd_potential)
 
 
-
 @dataclass(frozen=True)
 class DynamicPotentialHandler:
     potential_params: FrozenDict

@@ -1,4 +1,7 @@
 """utilities for cdft"""
+import jax 
+from jax import numpy as jnp
+import typing
 
 def r_midpoints(bin_edges: jax.Array, **unused_kwargs) -> jax.Array:
     return (bin_edges[:-1] + bin_edges[1:])/2.
@@ -113,14 +116,3 @@ def dFexcsdn_HNC_Riemann_approx_periodic(
                                  axis = (0,1,2))
     gamma = jnp.flip(unflipped_fftconv) # flips all axes to push back to a proper convolution
     return -0.5 * kT * gamma 
-
-def density_from_model(
-        r: float, 
-        params: NNParams, 
-        r_cut: float, 
-        n0: float, 
-        kT: float, 
-        model: GaussianBasisMLP) -> NNFn:
-    u = model.apply(params, jnp.array([r]))[0]
-    u = u * cosine_cutoff(r, r_cut)
-    return n0 * jnp.exp(-u / kT)
