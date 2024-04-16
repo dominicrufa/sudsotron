@@ -1,4 +1,5 @@
 """potentials"""
+import jax
 from jax import numpy as jnp
 import typing
 import numpy as np

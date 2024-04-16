@@ -26,10 +26,6 @@ from sudsotron.potentials.handlers import (
     PotentialHandler,
 )
 
-from sudsotron.cDFT.dcf import (
-    HNCRadialDCF,
-)
-
 from sudsotron.cDFT.constants import (
     DEFAULT_KT, 
     DEFAULT_GRID_FLOATTYPE,
