@@ -162,7 +162,6 @@ def load_HNCRadalDCFHandler(
     params_bytefile = resources.files('sudsotron.data') / 'HNCRadialDCFHandler.tip3p.params.txt' if params_bytefile is None else params_bytefile
     return HNCRadialDCFHandler.load_from_params_binary(params_bytefile, None, None, npz_datafile)
 
-
 def density_from_model(
         r: float, 
         params: NNParams, 

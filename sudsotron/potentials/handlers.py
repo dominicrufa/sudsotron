@@ -36,9 +36,9 @@ class PotentialHandler:
     potential: PotentialFn
     paramd_potential: PotentialFn = field(init=False)
 
-def __post_init__(self):
-    paramd_potential = lambda x: self.potential(x, **self.potential_params)
-    object.__setattr__(self, 'paramd_potential', paramd_potential)
+    def __post_init__(self):
+        paramd_potential = lambda x: self.potential(x, **self.potential_params)
+        object.__setattr__(self, 'paramd_potential', paramd_potential)
 
 
 @dataclass(frozen=True)
@@ -50,16 +50,16 @@ class DynamicPotentialHandler:
         typing.Dict[str, typing.Union[jax.Array, float]]]
     dynamic_potential: DynamicPotentialFn = field(init=False)
 
-def __post_init__(self):
-    dynamic_potential = jax.jit(
-        functools.partial(
-            dynamic_potential, 
-            static_params = self.potential_params,
-            potential_fn = self.potential,
-            dynamic_kwargs_fn = self.dynamic_kwargs
-            )
-    )
-    object.__setattr__(self, 'dynamic_potential', dynamic_potential)
+    def __post_init__(self):
+        dynamic_potential = jax.jit(
+            functools.partial(
+                dynamic_potential, 
+                static_params = self.potential_params,
+                potential_fn = self.potential,
+                dynamic_kwargs_fn = self.dynamic_kwargs
+                )
+        )
+        object.__setattr__(self, 'dynamic_potential', dynamic_potential)
 
 def dynamic_nn_potential(
         r: float,
@@ -140,13 +140,13 @@ class DynamicHybridPotentialHandler:
     dynamic_nn_potential_handler: DynamicNeuralPotentialHandler
     dynamic_hybrid_potential: DynamicPotentialFn = field(init=False)
 
-def __post_init__(self):
-    dynamic_hybrid_potential = functools.partial(
-        dynamic_hybrid_potential,
-        dynamic_potential = self.dynamic_potential_handler.dynamic_potential,
-        dynamic_nn_potntial = self.dynamic_nn_potential_handler.dynamic_potential,
-        )
-    object.__setattr__(
-        self, 
-        'dynamic_hybrid_potential', 
-        jax.jit(dynamic_hybrid_potential))
+    def __post_init__(self):
+        dynamic_hybrid_potential = functools.partial(
+            dynamic_hybrid_potential,
+            dynamic_potential = self.dynamic_potential_handler.dynamic_potential,
+            dynamic_nn_potntial = self.dynamic_nn_potential_handler.dynamic_potential,
+            )
+        object.__setattr__(
+            self, 
+            'dynamic_hybrid_potential', 
+            jax.jit(dynamic_hybrid_potential))
