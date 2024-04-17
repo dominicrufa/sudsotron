@@ -2,6 +2,7 @@
 import jax 
 from jax import numpy as jnp
 import typing
+import functools
 
 def r_midpoints(bin_edges: jax.Array, **unused_kwargs) -> jax.Array:
     return (bin_edges[:-1] + bin_edges[1:])/2.
