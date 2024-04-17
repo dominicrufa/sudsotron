@@ -14,9 +14,13 @@ from sudsotron.nn.modules import (
     NNParams,
 )
 
-from sudsotron.nn.utils import cosine_cutoff
+from sudsotron.utils import cosine_cutoff, minimize
 
-from sudsotron.cDFT.dcf import (
+from sudsotron.cDFT.handlers import (
+    DEFAULT_KT,
+    DEFAULT_N0,
+    DEFAULT_R_CUT,
+    DEFAULT_NUM_GRIDPOINTS,
     HNCRadialDCF,
 )
 
@@ -25,23 +29,21 @@ from sudsotron.potentials.handlers import (
     DynamicNeuralPotentialHandler,
 )
 
-from sudsotron.cDFT.constants import (
-    DEFAULT_KT, 
-    DEFAULT_GRID_FLOATTYPE,
-    DEFAULT_N0,
-    DEFAULT_M,
-)
-
 from sudsotron.cDFT.utils import (
     spatial_grids,
     dFexcsdn_HNC_Riemann_approx_aperiodic,
 )
 
-from sudsotron.cDDFT.constants import (
-    DEFAULT_FRICTION_COEFF,
-    DEFAULT_T,
-    DEFAULT_V_LIMIT_SCALE,
-)
+DEFAULT_M = 18 # amus for H2O
+DEFAULT_FRICTION_COEFF = 1. # 1 / ps
+DEFAULT_T = 50. # ps
+DEFAULT_VELOCITY_LIMIT_SCALE = 16 # unitless
+DEFAULT_NUM_SPATIAL_GRIDPOINTS = DEFAULT_NUM_GRIDPOINTS
+DEFAULT_NUM_TEMPORAL_GRIDPOINTS = 100
+DEFAULT_NUM_VELOCITY_GRIDPOINTS = 100
+DEFAULT_NUM_MEAN_VELOCITY_PROJECTIONS = 32
+
+
 
 @dataclass(frozen=True)
 class SSKKFE: # spherically symmetric KKFE
@@ -50,8 +52,8 @@ class SSKKFE: # spherically symmetric KKFE
         DynamicPotentialHandler,
         DynamicNeuralPotentialHandler,
     ]
-    grid_bounds: jnp.array([-1., 1.])
-    num_gridpoints: int = 100
+    spatial_grid_bounds: jnp.array([-DEFAULT_R_CUT, DEFAULT_R_CUT])
+    num_gridpoints: int = DEFAULT_NUM_GRIDPOINTS
     n0: float = DEFAULT_N0
     kT: float = DEFAULT_KT
     model_params: GaussianBasisPINN = GaussianBasisPINNParams()
@@ -60,7 +62,7 @@ class SSKKFE: # spherically symmetric KKFE
     # dynamic params
     m: float = DEFAULT_M
     friction_coeff: float = DEFAULT_FRICTION_COEFF
-    num_v_gridpoints: int = 100
+    num_v_gridpoints: int = DEFAULT_NUM_GRIDPOINTS
     num_v_mean_projections: int = 32
     ts: jax.Array = jnp.linspace(0., DEFAULT_T)
 
