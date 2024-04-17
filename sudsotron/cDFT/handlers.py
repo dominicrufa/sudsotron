@@ -40,8 +40,7 @@ def dcf_helper(
         params: NNParams, 
         r_cut: typing.Union[float, None],
         model: GaussianBasisMLP) -> float:
-    r = jnp.abs(r)
-    x = jnp.array([r])
+    x = jnp.abs(jnp.array([r]))
     out = model.apply(params, x)[0]
     if r_cut is not None:
         out = out * cosine_cutoff(r, r_cut)
