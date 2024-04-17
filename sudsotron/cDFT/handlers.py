@@ -175,12 +175,13 @@ class SScDFTHandler: # spherically symmetric classical DFT
     will fit a function for density on a grid with a solute particle at origin
     with a solvent dcf kernel and interaction potential given by `hnc_dcf` and 
     `Uext_handler`, respectively.
-    Empirically, loss goes to ~1.5e-3 kJ/mol/nm^3, but decreases with 
+    Empirically, loss goes to ~2.3e-3 kJ/mol/nm^3, but decreases with 
     tighter grid spacing (higher compute/memory costs); I also find that
     the radial density qualitatively looks 'good'.
 
     Example:
-    >>> from sudsotron.potentials.potential_lib import TIP3PSCLJParameters, sc_lj
+    >>> from sudsotron.cDFT.handlers import load_HNCRadialDCFHandler, SScDFTHandler
+    >>> from sudsotron.potentials.potential_lib import PotentialHandler, TIP3PSCLJParameters, sc_lj
     >>> hnc_dcf = load_HNCRadalDCFHandler()
     >>> Uext_handler = PotentialHandler(TIP3PSCLJParameters, sc_lj)
     >>> dft_handler = SScDFTHandler(hnc_dcf, Uext_handler)
