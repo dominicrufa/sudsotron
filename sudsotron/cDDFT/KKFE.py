@@ -21,12 +21,14 @@ from sudsotron.cDFT.handlers import (
     DEFAULT_N0,
     DEFAULT_R_CUT,
     DEFAULT_NUM_GRIDPOINTS,
-    HNCRadialDCF,
+    HNCRadialDCFHandler,
+    SScDFTHandler,
 )
 
 from sudsotron.potentials.handlers import (
     DynamicPotentialHandler,
     DynamicNeuralPotentialHandler,
+    DynamicHybridPotentialHandler
 )
 
 from sudsotron.cDFT.utils import (
