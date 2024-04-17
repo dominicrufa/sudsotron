@@ -33,7 +33,7 @@ DEFAULT_KT = 2.48 # amu * nm^2 / (ps^2 * particle) # this is 1kT at ~300K
 DEFAULT_N0 = 32.776955 # particles/nm**3 (taken from dcf data for TIP3P at ambient conditions w/ RF electrostatics)
 DEFAULT_M = 18. # amus (mass of H2O mol)
 DEFAULT_R_CUT = 1.2
-DEFAULT_GRID_FLOATTYPE = jnp.float32
+DEFAULT_NUM_GRIDPOINTS = 120
 
 def dcf_helper(
         r: float, 
@@ -55,6 +55,11 @@ def dcf_loss(params: NNParams, r_midpoints: jax.Array, dcf_data, dcf_fn: NNFn) -
 class HNCRadialDCFHandler:
     """fit and deploy a radial direct correlation 
     function in the HNC approximation.
+
+    Example:
+    >>> npz_datafile = resources.files('sudsotron.data') / 'tip3p_dcf_data.npz'
+    >>> handler = HNCRadialDCFHandler(None, None, npz_filedata)
+    >>> handler.fit_dcf_params() # tada
     """
     radial_bin_edges: typing.Union[jax.Array, None] # [N,]
     dcf_data: typing.Union[jax.Array, None] # [N-1], dcf data at bin edge centers
@@ -162,23 +167,29 @@ def load_HNCRadalDCFHandler(
     params_bytefile = resources.files('sudsotron.data') / 'HNCRadialDCFHandler.tip3p.params.txt' if params_bytefile is None else params_bytefile
     return HNCRadialDCFHandler.load_from_params_binary(params_bytefile, None, None, npz_datafile)
 
-def density_from_model(
-        r: float, 
-        params: NNParams, 
-        r_cut: float, 
-        n0: float, 
-        kT: float, 
-        model: GaussianBasisMLP) -> NNFn:
-    u = model.apply(params, jnp.array([r]))[0]
-    u = u * cosine_cutoff(r, r_cut)
-    return n0 * jnp.exp(-u / kT)
 
 @dataclass(frozen=True)
 class SScDFTHandler: # spherically symmetric classical DFT
+    """
+    Handler for a spherically symmetric classical DFT;
+    will fit a function for density on a grid with a solute particle at origin
+    with a solvent dcf kernel and interaction potential given by `hnc_dcf` and 
+    `Uext_handler`, respectively.
+    Empirically, loss goes to ~1.5e-3 kJ/mol/nm^3, but decreases with 
+    tighter grid spacing (higher compute/memory costs); I also find that
+    the radial density qualitatively looks 'good'.
+
+    Example:
+    >>> from sudsotron.potentials.potential_lib import TIP3PSCLJParameters, sc_lj
+    >>> hnc_dcf = load_HNCRadalDCFHandler()
+    >>> Uext_handler = PotentialHandler(TIP3PSCLJParameters, sc_lj)
+    >>> dft_handler = SScDFTHandler(hnc_dcf, Uext_handler)
+    >>> res = dft_handler.fit_density_params() # fit and set `params`
+    """
     hnc_dcf: HNCRadialDCFHandler
-    Uext_handler: PotentialHandler
-    grid_bounds: jax.Array = field(default_factory = lambda : jnp.array([-1., 1.]))
-    num_gridpoints: int = 100
+    Uext_handler: PotentialHandler 
+    grid_bounds: jax.Array = field(default_factory = lambda : jnp.array([-DEFAULT_R_CUT, DEFAULT_R_CUT]))
+    num_gridpoints: int = DEFAULT_NUM_GRIDPOINTS
     n0: float = DEFAULT_N0
     kT: float = DEFAULT_KT
     model_params: GaussianBasisMLPParams = GaussianBasisMLPParams()
@@ -200,6 +211,7 @@ class SScDFTHandler: # spherically symmetric classical DFT
     density: typing.Callable[[float, float, NNParams], float] = field(init=False)
     grid_density: typing.Callable[[NNParams], jax.Array] = field(init=False)
     untrained_params: NNParams = field(init=False)
+    params: NNParams = field(init=False)
 
     def __post_init__(self):
         # grid stuff
@@ -214,42 +226,48 @@ class SScDFTHandler: # spherically symmetric classical DFT
         self.set_dFexcsdn()
         self.set_dFextsdn()
         self.set_dFsdn()
+        self.set_dFsdn_loss()
     
     def set_R(self):
         """set `R`, the grid of euclidean distances"""
         assert self.num_gridpoints % 2 == 0, f"`num_gridpoints` must be even to avoid LJ singularity @ origin"
-        R_grid = spatial_grids(
+        xyz_tuple, dxdydz_arr, R_grids = spatial_grids(
             grid_limits = self.grid_bounds,
             num_gridpoints_per_dim = self.num_gridpoints,
-            solute_Rs = jnp.zeros((1, 3)), dtype = DEFAULT_GRID_FLOATTYPE)
-        object.__setattr__(self, 'R', R_grid[0])
+            solute_Rs = jnp.zeros((1, 3)) # only a solute particle at origin
+        )
+        #R_grids has leading axis corresponding to 1 for num_solute_particles (=1)
+        R_grid = R_grids[0]
+        object.__setattr__(self, 'R', R_grid)
     
     def set_dcf_kernel(self):
         """set the `dcf_kernel` from `R`"""
-        dcf_fn, dcf_params = hnc_dcf.dcf, hnc_dcf.params
-        partial_dcf_fn = functools.partial(dcf, params = dcf_params)
-        grid_dcf_fn = jax.vmap(jax.vmap(jax.vmap(partial_dcf)))
+        dcf_fn, dcf_params = self.hnc_dcf.dcf, self.hnc_dcf.params
+        partial_dcf_fn = functools.partial(dcf_fn, params = dcf_params)
+        grid_dcf_fn = jax.vmap(jax.vmap(jax.vmap(partial_dcf_fn)))
         dcf_kernel = grid_dcf_fn(self.R)
         object.__setattr__(self, 'dcf_kernel', dcf_kernel)
     
     def set_densities_and_untrained_params(self):
-        model = GaussianBasisMLP(**asdict(self.mlp_params))
+        model = GaussianBasisMLP(**asdict(self.model_params))
         untrained_params = model.init(self.key, jnp.zeros(1)) # for r
         object.__setattr__(self, 'untrained_params', untrained_params)
-        perturbation_density = functools.partial(
-            density_from_model,
-            r_cut = self.hnc_dcf.r_cut, 
-            n0 = self.n0, 
-            kT = self.kT, 
-            model = model 
-        )
-        ideal_density = lambda Uext: self.n0 * jnp.exp(-Uext/self.kT)
-        density = lambda r, Uext, params: perturbation_density(r, params) * ideal_density(Uext)
+        def norm_pert_density(r, params):
+            u = model.apply(params, jnp.array([r]))[0]
+            u = u * cosine_cutoff(r, self.hnc_dcf.r_cut)
+            return jnp.exp(-u / self.kT)
+
+        def norm_ideal_density(Uext):
+            return jnp.exp(-Uext / self.kT)
+
+        def density(r, Uext, params):
+            return self.n0 * norm_pert_density(r, params) * norm_ideal_density(Uext)
+            
         object.__setattr__(self, 'density', density)
 
+        Uext_on_line = jax.vmap(self.Uext_handler.paramd_potential)
         if self.interpolate_density:
             rs = jnp.linspace(0., self.hnc_dcf.r_cut, self.num_gridpoints)
-            Uext_on_line = jax.vmap(self.Uext_handler.paramd_potential)
             line_density = lambda params: jax.vmap(
                 density, 
                 in_axes = (0,0,None)
@@ -297,40 +315,32 @@ class SScDFTHandler: # spherically symmetric classical DFT
             )
 
     def set_dFsdn(self):
-        dFsdn = lambda params: self.dFidsdn(self.R) + self.dFexcsdn(self.R) + self.dFextsdn(self.R)
+        def dFsdn(params):
+            grid_densities = self.grid_density(params)
+            _dFsdn = (self.dFidsdn(grid_densities) 
+                      + self.dFexcsdn(grid_densities) 
+                      + self.dFextsdn(self.R))
+            return _dFsdn
         object.__setattr__(self, 'dFsdn', dFsdn)
     
     def set_dFsdn_loss(self):
         loss = lambda params: jnp.sum(self.dFsdn(params)**2) / jnp.prod(jnp.array(self.R.shape))
         object.__setattr__(self, 'dFsdn_loss', loss)
     
-    def fit_density_params(
-            self, 
-            params: NNParams,
-            maxiter: int = 9999,
-            tol: float = 1e-6,
-            jupyter_verbose: bool=True) -> typing.NamedTuple:
-        if jupyter_verbose:
-            from IPython.display import display, clear_output
-            def call(_loss):
-                clear_output(wait=True)
-                display(f"loss: {_loss}")
-        else:
-            def call(_loss): pass
-
-        jitd_valgrad_loss = jax.jit(jax.value_and_grad(self.dFsdn_loss))
-        def valgrad_loss(params):
-            _loss, _grad_loss = jitd_valgrad_loss(params)
-            call(_loss)
-            return _loss, _grad_loss
-        solver = jaxopt.BFGS(
-            valgrad_loss, 
-            value_and_grad=True, 
-            maxiter=maxiter,
-            tol = tol,
-            jit=False)
-        res = solver.run(params)
-        return res
-    
     def set_params(self, params: NNParams):
         object.__setattr__(self, 'params', params)
+
+    def fit_density_params(
+            self,
+            **minimize_kwargs,
+            ) -> typing.NamedTuple:
+        """fit the density parameters, set the new params, 
+        and return the minimizer result `NamedTuple`"""
+        res = minimize(
+            self.dFsdn_loss,
+            value_and_grad = False,
+            params = self.untrained_params,
+            **minimize_kwargs
+            )
+        self.set_params(res.params)
+        return res
