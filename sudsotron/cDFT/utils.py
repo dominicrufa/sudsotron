@@ -62,13 +62,15 @@ def spatial_grids(
     grid_limits: jax.Array, #[2,]
     num_gridpoints_per_dim: int,
     solute_Rs: jax.Array) -> jax.Array:
-    """compute a grid of euclidean distances, one for each `solute_R` (on leading axis)"""
+    """compute a grid of euclidean distances, one for each `solute_R` (on leading axis);
+    WARNING: it is unclear to me whether `r_array` in the `grid_rs` function should be transposed at first thought
+    """
     grid_limits = jnp.repeat(grid_limits[jnp.newaxis, ...], repeats=3, axis=0) # repeat 3x for xyz
     (X,Y,Z), dxdydz = make_cartesian_spatial_grid(grid_limits, num_gridpoints_per_dim) # make grids and corresponding spacing
     grid_centers = (grid_limits[:,0] + grid_limits[:,1]) / 2.
     stacked_grid = jnp.vstack([X.flatten(), Y.flatten(), Z.flatten()]).T
     Rs = aperiodic_reference_rs(stacked_grid, solute_Rs)
-    grid_rs = jax.vmap(lambda r_arr: jnp.reshape(r_arr, 
+    grid_rs = jax.vmap(lambda r_arr: jnp.reshape(r_arr.T, 
                                                  (num_gridpoints_per_dim, 
                                                   num_gridpoints_per_dim, 
                                                   num_gridpoints_per_dim)))(Rs)
