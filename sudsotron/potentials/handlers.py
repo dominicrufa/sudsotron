@@ -52,7 +52,7 @@ class DynamicPotentialHandler:
     dynamic_potential: DynamicPotentialFn = field(init=False)
 
     def __post_init__(self):
-        dynamic_potential = jax.jit(
+        part_dynamic_potential = jax.jit(
             functools.partial(
                 dynamic_potential, 
                 static_params = self.potential_params,
@@ -60,7 +60,7 @@ class DynamicPotentialHandler:
                 dynamic_kwargs_fn = self.dynamic_kwargs_fn
                 )
         )
-        object.__setattr__(self, 'dynamic_potential', dynamic_potential)
+        object.__setattr__(self, 'dynamic_potential', part_dynamic_potential)
 
 def dynamic_nn_potential(
         r: float,
