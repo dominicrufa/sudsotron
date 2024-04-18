@@ -3,6 +3,7 @@ import jax
 from jax import numpy as jnp
 import typing
 import numpy as np
+import functools
 from dataclasses import dataclass, asdict, fields, field
 from flax.core import FrozenDict, copy
 from flax import linen as nn
@@ -45,7 +46,7 @@ class PotentialHandler:
 class DynamicPotentialHandler:
     potential_params: FrozenDict
     potential: DynamicPotentialFn
-    dynamic_kwargs: typing.Callable[
+    dynamic_kwargs_fn: typing.Callable[
         float, 
         typing.Dict[str, typing.Union[jax.Array, float]]]
     dynamic_potential: DynamicPotentialFn = field(init=False)
@@ -56,7 +57,7 @@ class DynamicPotentialHandler:
                 dynamic_potential, 
                 static_params = self.potential_params,
                 potential_fn = self.potential,
-                dynamic_kwargs_fn = self.dynamic_kwargs
+                dynamic_kwargs_fn = self.dynamic_kwargs_fn
                 )
         )
         object.__setattr__(self, 'dynamic_potential', dynamic_potential)
