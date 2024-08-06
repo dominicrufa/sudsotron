@@ -39,41 +39,58 @@ def aperiodic_reference_rs(
 
 def cartesian_linspaces_and_retsteps(
     limits: jax.Array, # [N_dim, 2]
-    num_gridpoints_per_dim: float, 
-    **unused_kwargs) -> typing.Tuple[jax.Array, jax.Array]:
+    num_gridpoints_per_dim: typing.Union[int, None], 
+    dx: typing.Union[float, None]=None,
+    **unused_kwargs) -> typing.Tuple[typing.Tuple[jax.Array], jax.Array]:
     """given a `limits` (shape [n_dim, 2]) for each dimension and a `num_gridpoints_per_dim` [n_dim],
-    generate linspaces and retstep sizes for each dimension"""
-    partial_linspaces = functools.partial(jnp.linspace, num = num_gridpoints_per_dim, retstep=True)
-    cartesian_linspaces, d_spatial = jax.vmap(partial_linspaces)(limits[:,0], limits[:,1])
-    return cartesian_linspaces, d_spatial
+    or `dx`, generate linspaces and retstep sizes for each dimension;
+    NOTE: if both `num_gridpoints_per_dim` and `dx` is specified, will fail.
+    NOTE: if `dx` is used, will pad the upper limits of each dimension with `dx`"""
+    if num_gridpoints_per_dim is not None:
+        assert dx is None
+        partial_linspaces = functools.partial(jnp.linspace, num = num_gridpoints_per_dim, retstep=True)
+        cartesian_linspaces, d_spatial = jax.vmap(partial_linspaces)(limits[:,0], limits[:,1])
+        cartesian_linspaces = cartesian_linspaces.tolist()
+    else:
+        assert num_gridpoints_per_dim is None
+        cartesian_linspaces, d_spatial = [], []
+    for low_high_pair in limits:
+        linspace = np.arange(low_high_pair[0], low_high_pair[1] + dx, dx)
+        cartesian_linspaces.append(linspace)
+        d_spatial.append(dx)
+
+    return tuple(cartesian_linspaces), d_spatial
 
 def make_cartesian_spatial_grid(
     limits: jnp.array, # [N_dim, 2]
-    num_gridpoints_per_dim: float, 
+    num_gridpoints_per_dim: typing.Union[int, None], 
+    dx: typing.Union[float, None]=None,
     **unused_kwargs) -> typing.Tuple[jax.Array, jax.Array]:
     """compute a cartesian spatial grid given an `[n_dim, 2]` array of dimensions, an [n_dim] array for `num_gridpoints`.
     returns a tuple. the first is a tuple of (n_dim, [*num_gridpoints]), and the second is a [n_dim] array of spatial 
     gridpoint sizes"""
-    cartesian_linspaces, d_spatial = cartesian_linspaces_and_retsteps(limits, num_gridpoints_per_dim)
+    cartesian_linspaces, d_spatial = cartesian_linspaces_and_retsteps(limits, num_gridpoints_per_dim, num_gridpoints_per_dim, dx)
     cartesian_grids = jnp.meshgrid(*cartesian_linspaces, indexing='ij')
     return cartesian_grids, d_spatial
 
 def spatial_grids(
-    grid_limits: jax.Array, #[2,]
-    num_gridpoints_per_dim: int,
-    solute_Rs: jax.Array) -> jax.Array:
+    grid_limits: jax.Array, # (3, 2) or (2,)
+    num_gridpoints_per_dim: typing.Union[int, None], 
+    dx: typing.Union[float, None]=None,
+    solute_Rs: jax.Array = jnp.zeros(3)])) -> jax.Array:
     """compute a grid of euclidean distances, one for each `solute_R` (on leading axis);
     WARNING: it is unclear to me whether `r_array` in the `grid_rs` function should be transposed at first thought
     """
-    grid_limits = jnp.repeat(grid_limits[jnp.newaxis, ...], repeats=3, axis=0) # repeat 3x for xyz
-    (X,Y,Z), dxdydz = make_cartesian_spatial_grid(grid_limits, num_gridpoints_per_dim) # make grids and corresponding spacing
+    if len(grid_limits.shape) == 1: # using same limits for all dims, and need to repeat
+        grid_limits = jnp.repeat(grid_limits[jnp.newaxis, ...], repeats=3, axis=0) # repeat 3x for xyz
+    (X,Y,Z), dxdydz = make_cartesian_spatial_grid(grid_limits, num_gridpoints_per_dim, dx) # make grids and corresponding spacing
     grid_centers = (grid_limits[:,0] + grid_limits[:,1]) / 2.
     stacked_grid = jnp.vstack([X.flatten(), Y.flatten(), Z.flatten()]).T
     Rs = aperiodic_reference_rs(stacked_grid, solute_Rs)
     grid_rs = jax.vmap(lambda r_arr: jnp.reshape(r_arr.T, 
-                                                 (num_gridpoints_per_dim, 
-                                                  num_gridpoints_per_dim, 
-                                                  num_gridpoints_per_dim)))(Rs)
+                                                 (X.shape[0], 
+                                                  X.shape[1], 
+                                                  X.shape[2])))(Rs)
     return (X,Y,Z), dxdydz, grid_rs
     
 def dFidsdn(
