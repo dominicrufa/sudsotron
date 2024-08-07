@@ -54,10 +54,10 @@ def cartesian_linspaces_and_retsteps(
     else:
         assert num_gridpoints_per_dim is None
         cartesian_linspaces, d_spatial = [], []
-    for low_high_pair in limits:
-        linspace = np.arange(low_high_pair[0], low_high_pair[1] + dx, dx)
-        cartesian_linspaces.append(linspace)
-        d_spatial.append(dx)
+        for low_high_pair in limits:
+            linspace = jnp.arange(low_high_pair[0], low_high_pair[1] + dx, dx)
+            cartesian_linspaces.append(linspace)
+            d_spatial.append(dx)
 
     return tuple(cartesian_linspaces), d_spatial
 
