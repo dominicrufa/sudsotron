@@ -77,7 +77,8 @@ def spatial_grids(
     grid_limits: jax.Array, # (3, 2) or (2,)
     num_gridpoints_per_dim: typing.Union[int, None], 
     dx: typing.Union[float, None]=None,
-    solute_Rs: jax.Array = jnp.zeros(3)])) -> jax.Array:
+    solute_Rs: jax.Array = jnp.zeros(3),
+    ) -> jax.Array:
     """compute a grid of euclidean distances, one for each `solute_R` (on leading axis);
     WARNING: it is unclear to me whether `r_array` in the `grid_rs` function should be transposed at first thought
     """
